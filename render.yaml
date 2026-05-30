@@ -4,6 +4,10 @@
 #
 # Only the HireMate backend lives here. The three frontends
 # (landing, jobclaw, hiremate) are deployed on Vercel, not Render.
+#
+# NOTE: this is an npm-workspaces monorepo. We install from the repo root with
+# --workspace so dependencies (dotenv, express, ...) resolve correctly, and run
+# the server by its full path. (rootDir is intentionally NOT used here.)
 
 services:
   - type: web
@@ -11,9 +15,8 @@ services:
     runtime: node
     region: singapore           # closest to India; change if you prefer another
     plan: free                  # free tier sleeps after ~15 min idle
-    rootDir: hiremate/backend
-    buildCommand: npm install
-    startCommand: node server.js
+    buildCommand: npm install --workspace hiremate/backend
+    startCommand: node hiremate/backend/server.js
     healthCheckPath: /health
     autoDeploy: true            # redeploys on every push to the connected branch
     envVars:
