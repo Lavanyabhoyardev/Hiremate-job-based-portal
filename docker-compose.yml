@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  landing:
+    build:
+      context: ./landing
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+
+  jobclaw:
+    build:
+      context: ./jobclaw
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/jobglobe
+    depends_on:
+      - mongodb
+
+  hiremate-frontend:
+    build:
+      context: ./hiremate
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3002:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:5001/api
+
+  hiremate-backend:
+    build:
+      context: ./hiremate/backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      - PORT=5001
+      - MONGODB_URI=mongodb://mongodb:27017/hiremate_db
+      - JWT_SECRET=supersecret123
+      - CLIENT_URL=http://localhost:3002
+      # Provide your API keys via host environment or .env file mapping
+      - GROQ_API_KEY=${GROQ_API_KEY:-mock}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-mock}
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

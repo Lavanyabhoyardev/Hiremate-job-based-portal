@@ -1,0 +1,65 @@
+# ─── Root-level .gitignore ───────────────────────────────────────────────────
+# Covers the entire monorepo (landing, jobclaw, hiremate)
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+**/dist/
+**/.next/
+**/out/
+
+# Environment files — NEVER commit these
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor & OS
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Vercel & Render
+.vercel
+.render
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Coverage
+coverage/
+.cache/
+.eslintcache
+
+# Uploads (runtime data)
+hiremate/backend/uploads/*
+!hiremate/backend/uploads/.gitkeep
+
+# Misc
+tmp/
+Temp/
+*.local
+*.pem

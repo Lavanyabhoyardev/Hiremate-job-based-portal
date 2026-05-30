@@ -1,0 +1,176 @@
+@import "tailwindcss"; // Import TailwindCSS utilities
+
+// Root CSS variables and base styles
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Link styles
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+// Performance optimizations for smooth scrolling
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+// Body base layout
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+// Heading styles
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+// Button base styles
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+// Light mode overrides
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+/* Custom prose styles for Markdown rendering */
+.prose {
+  max-width: none;
+}
+
+.prose h1 {
+  font-size: 2rem;
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.prose h1:first-child {
+  margin-top: 0;
+}
+
+.prose h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.prose h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+.prose ul {
+  list-style-type: none;
+  margin-left: 0;
+  margin-bottom: 0.75rem;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  list-style-position: inside;
+  margin-left: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose li {
+  color: #475569;
+  margin-bottom: 0.5rem;
+  line-height: 1.625;
+}
+
+.prose p {
+  color: #475569;
+  margin-bottom: 0.75rem;
+  line-height: 1.625;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.prose em {
+  font-style: italic;
+  color: #64748b;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}

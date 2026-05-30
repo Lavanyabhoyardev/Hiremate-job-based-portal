@@ -1,0 +1,19 @@
+{
+  "name": "combineproject",
+  "version": "1.0.0",
+  "description": "Monorepo containing JobClaw, HireMate, and Landing Page",
+  "private": true,
+  "workspaces": [
+    "landing",
+    "jobclaw",
+    "hiremate",
+    "hiremate/backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w landing\" \"npm run dev -w jobclaw\" \"npm run dev -w hiremate\" \"npm run dev -w hiremate/backend\"",
+    "build": "npm run build --workspaces"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
