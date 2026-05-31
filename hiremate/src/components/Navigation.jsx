@@ -27,7 +27,7 @@ export default function Navigation() {
 	return (
 		<div className="fixed top-4 right-4 z-50 flex items-center">
 			<a
-				href="http://localhost:3000"
+				href={import.meta.env.VITE_PORTAL_URL || 'http://localhost:3000'}
 				className="mr-3 inline-flex items-center rounded-full bg-white/5 backdrop-blur border border-white/10 px-4 py-1.5 text-sm font-medium text-white/90 hover:bg-white/10 transition-colors"
 			>
 				Portal Home

@@ -141,7 +141,7 @@ export default function Header({
 
           {/* Home Button */}
           <a
-            href="http://localhost:3000"
+            href={process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3000"}
             className="bg-[#12121A]/80 backdrop-blur-xl border border-[#1E1E2E] hover:border-[#00E5A0]/30 rounded-2xl px-2.5 sm:px-4 py-2.5 sm:py-3 transition-all text-[#8888A0] hover:text-[#00E5A0] text-xs font-medium flex items-center gap-2"
           >
             <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
