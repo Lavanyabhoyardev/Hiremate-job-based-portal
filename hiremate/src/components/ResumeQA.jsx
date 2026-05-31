@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { API_BASE } from '../api/base';
 
 const ResumeQA = () => {
   const [file, setFile] = useState(null);
@@ -74,7 +75,7 @@ const ResumeQA = () => {
       
       if (chatMode === 'resume' && resumeUploaded) {
         // Ask resume-specific question
-        response = await fetch('http://localhost:5001/api/resume/ask', {
+        response = await fetch(`${API_BASE}/api/resume/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question }),
@@ -82,7 +83,7 @@ const ResumeQA = () => {
         data = await response.json();
       } else {
         // General question - use the chat endpoint
-        response = await fetch('http://localhost:5001/api/chat/message', {
+        response = await fetch(`${API_BASE}/api/chat/message`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
