@@ -42,28 +42,42 @@ class AIService {
       // Preserve streaming behavior when options.stream is truthy.
       const originalCreate = client.chat?.completions?.create?.bind(client.chat?.completions);
 
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+      // Retry transient failures (rate limit / 5xx / network) — common on Render
+      // cold starts and Groq's free tier. Don't retry client errors (400/401).
+      const isTransient = (err) => {
+        const s = err && err.status;
+        return s === 429 || s === 408 || (s >= 500 && s <= 599) || s === undefined;
+      };
       const safeCreate = async (options) => {
-        try {
-          if (!originalCreate) throw new Error('Groq create method unavailable');
-          return await originalCreate(options);
-        } catch (err) {
-          logger.error('Groq API failed, returning mock fallback in aiService:', err && err.message ? err.message : err);
-
-          const mockText = options?.messages?.find(m => m.role === 'user')?.content
-            ? `Mock (fallback): ${options.messages.find(m => m.role === 'user').content}`
-            : 'Mock response (fallback)';
-
-          // If the caller requested a stream, return an async iterable that yields one chunk
-          if (options && options.stream) {
-            return {
-              async *[Symbol.asyncIterator]() {
-                yield { choices: [{ delta: { content: mockText } }] };
-              }
-            };
+        if (!originalCreate) throw new Error('Groq create method unavailable');
+        const maxAttempts = 3;
+        let lastErr = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            return await originalCreate(options);
+          } catch (err) {
+            lastErr = err;
+            if (attempt < maxAttempts && isTransient(err)) {
+              logger.warn(`Groq attempt ${attempt} failed (${err && err.message}); retrying...`);
+              await sleep(600 * attempt); // 600ms, then 1200ms
+              continue;
+            }
+            break;
           }
-
-          return { choices: [{ message: { content: mockText } }] };
         }
+        logger.error('Groq API failed after retries in aiService:', lastErr && lastErr.message ? lastErr.message : lastErr);
+
+        // Clean, honest fallback — never echo the raw prompt back to the user.
+        const fallbackText = 'The AI service is temporarily busy. Please try again in a few seconds.';
+        if (options && options.stream) {
+          return {
+            async *[Symbol.asyncIterator]() {
+              yield { choices: [{ delta: { content: fallbackText } }] };
+            }
+          };
+        }
+        return { choices: [{ message: { content: fallbackText } }] };
       };
 
       // Attach safe wrapper to use below in the service
