@@ -31,7 +31,7 @@ const ResumeQA = () => {
 
     setIsUploading(true);
     try {
-      const response = await fetch('http://localhost:5001/api/resume/upload', {
+      const response = await fetch(`${API_BASE}/api/resume/upload`, {
         method: 'POST',
         body: formData,
       });
