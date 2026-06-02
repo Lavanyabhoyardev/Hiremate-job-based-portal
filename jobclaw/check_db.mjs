@@ -6,7 +6,7 @@ const DB_NAME = process.env.MONGODB_DB || "jobglobe";
 
 async function run() {
   if (!process.env.MONGODB_URI) {
-    console.warn(`MONGODB_URI not set, using local default ${LOCAL_DEFAULT_URI}`);
+    console.warn("MONGODB_URI not set, using local default configuration");
   }
 
   const client = await MongoClient.connect(MONGODB_URI);
