@@ -1,11 +1,12 @@
 import { MongoClient } from 'mongodb';
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/jobglobe";
+const LOCAL_DEFAULT_URI = "mongodb://localhost:27017/jobglobe";
+const MONGODB_URI = process.env.MONGODB_URI || LOCAL_DEFAULT_URI;
 const DB_NAME = process.env.MONGODB_DB || "jobglobe";
 
 async function run() {
   if (!process.env.MONGODB_URI) {
-    console.warn("MONGODB_URI not set, using local default mongodb://localhost:27017/jobglobe");
+    console.warn(`MONGODB_URI not set, using local default ${LOCAL_DEFAULT_URI}`);
   }
 
   const client = await MongoClient.connect(MONGODB_URI);
