@@ -1,9 +1,12 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const logger = require('../utils/logger');
-const { createClerkClient } = require('@clerk/backend');
+const { createClerkClient, verifyToken } = require('@clerk/backend');
 
-// Lazy-initialize clerk client so env vars are always loaded first
+// Lazy-initialize clerk client so env vars are always loaded first.
+// NOTE: this client is now only used on the rare one-time path of creating
+// a brand-new MongoDB record for a first-seen user (to fetch their email/name).
+// Normal authenticated requests never call the Clerk API anymore.
 let _clerkClient = null;
 function getClerkClient() {
   if (!_clerkClient) {
@@ -14,7 +17,19 @@ function getClerkClient() {
   return _clerkClient;
 }
 
-// Define authenticate — decode JWT to extract Clerk user ID, then validate via Clerk API
+// Verify a Clerk session token LOCALLY (cryptographic signature check, no API call).
+// Returns the decoded JWT claims, or throws if the token is invalid/expired.
+function verifyClerkToken(token) {
+  return verifyToken(token, {
+    secretKey: process.env.CLERK_SECRET_KEY,
+    // Tolerate small clock differences between Clerk and the Render instance.
+    clockSkewInMs: 10000,
+  });
+}
+
+// Define authenticate — verify the Clerk JWT locally, then load the MongoDB user.
+// No per-request Clerk API call, so health checks and high request volume can
+// never exhaust the Clerk instance rate limit.
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -24,33 +39,40 @@ const authenticate = async (req, res, next) => {
 
     const token = authHeader.substring(7);
 
-    // Step 1: Decode the JWT (without signature verification) to get the Clerk user ID
-    let clerkId;
+    // Step 1: Verify the token's signature locally and extract claims.
+    // This replaces the old jwt.decode() + Clerk getUser() API round-trip:
+    // a forged token now fails here because it isn't signed by Clerk.
+    let claims;
     try {
-      const decoded = jwt.decode(token);
-      if (!decoded || !decoded.sub) {
-        return res.status(401).json({ success: false, message: 'Invalid token format.' });
-      }
-      clerkId = decoded.sub;
-    } catch (decodeErr) {
-      logger.warn('JWT decode failed:', decodeErr.message);
-      return res.status(401).json({ success: false, message: 'Invalid token.' });
-    }
-
-    // Step 2: Confirm this user actually exists in Clerk (prevents forged tokens)
-    try {
-      await getClerkClient().users.getUser(clerkId);
-    } catch (clerkErr) {
-      logger.warn('Clerk user lookup failed for id:', clerkId, clerkErr.message);
+      claims = await verifyClerkToken(token);
+    } catch (verifyErr) {
+      logger.warn('Clerk token verification failed:', verifyErr.message);
       return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
     }
 
-    // Step 3: Find or create the MongoDB user record
+    const clerkId = claims?.sub;
+    if (!clerkId) {
+      return res.status(401).json({ success: false, message: 'Invalid token format.' });
+    }
+
+    // Step 2: Find or create the MongoDB user record.
+    // (A DB lookup — not a Clerk API call — so it does not affect Clerk limits.)
     let user = await User.findOne({ clerkId });
 
     if (!user) {
-      const clerkUserObj = await getClerkClient().users.getUser(clerkId);
-      const email = clerkUserObj.emailAddresses[0]?.emailAddress;
+      // First time we've seen this Clerk user: we need their email/name.
+      // Verified session tokens don't always carry email, so fall back to the
+      // Clerk API ONCE, only at account-creation time (never on hot paths).
+      let email = claims.email || claims.email_address || null;
+      let firstName;
+      let lastName;
+
+      if (!email) {
+        const clerkUserObj = await getClerkClient().users.getUser(clerkId);
+        email = clerkUserObj.emailAddresses[0]?.emailAddress;
+        firstName = clerkUserObj.firstName;
+        lastName = clerkUserObj.lastName;
+      }
 
       // Maybe they signed up before clerkId was linked
       user = await User.findOne({ email });
@@ -62,9 +84,9 @@ const authenticate = async (req, res, next) => {
         user = await User.create({
           clerkId,
           email,
-          name: clerkUserObj.firstName
-            ? `${clerkUserObj.firstName} ${clerkUserObj.lastName || ''}`.trim()
-            : 'New User',
+          name: firstName
+            ? `${firstName} ${lastName || ''}`.trim()
+            : (claims.name || 'New User'),
           isActive: true,
           credits: 100,
         });
@@ -139,8 +161,9 @@ const optionalAuth = async (req, res, next) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       try {
-        const decoded = jwt.decode(token);
-        const clerkId = decoded?.sub;
+        // Verify locally (no Clerk API call); silently ignore invalid tokens.
+        const claims = await verifyClerkToken(token);
+        const clerkId = claims?.sub;
         if (clerkId) {
           const user = await User.findOne({ clerkId });
           if (user && user.isActive) {
