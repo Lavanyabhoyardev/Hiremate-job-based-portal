@@ -17,17 +17,9 @@ export default function JobDetail({ job }: JobDetailProps) {
     setIsVerified(localStorage.getItem("jobclaw_verified") === "true");
   }, []);
 
-  const handleProtectedClick = useCallback(
-    (url: string) => {
-      if (isVerified) {
-        window.open(url, "_blank", "noopener,noreferrer");
-      } else {
-        setPendingUrl(url);
-        setGateOpen(true);
-      }
-    },
-    [isVerified]
-  );
+  const handleProtectedClick = useCallback((url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }, []);
 
   const handleVerified = useCallback(() => {
     setIsVerified(true);
