@@ -68,10 +68,16 @@ const corsOptions = {
     const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
     const allowAnyLocalInDev = process.env.NODE_ENV !== 'production' && isLocalhost;
 
-    if (allowedOrigins.includes(origin) || allowAnyLocalInDev) {
+    // Allow this project's Vercel deployments — including preview/branch URLs,
+    // which carry a random suffix (e.g. hiremate-job-based-portal-hiremate-<hash>.vercel.app)
+    // and therefore can't be listed exhaustively in CLIENT_URL.
+    const isProjectVercelPreview = /^https:\/\/hiremate-job-based-portal-[a-z0-9-]+\.vercel\.app$/.test(origin);
+
+    if (allowedOrigins.includes(origin) || allowAnyLocalInDev || isProjectVercelPreview) {
       return callback(null, true);
     }
 
+    logger.warn('CORS blocked origin:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
